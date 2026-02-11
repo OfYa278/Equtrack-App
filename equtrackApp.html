@@ -1,31 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <!-- Title of the webpage, shown in the browser tab -->
     <title>Temperature sensor</title>
     <style type="text/css">
-        /* Styling for the text within elements with the class "text-properties" */
+        /* CSS styles for text alignment and button */
         .text-properties {
-            text-align: center; /* Aligns text to the center */
+            text-align: center; /* Centers the text inside the div */
+        }
+        .toggle-btn {
+            display: block; /* Makes the button a block element */
+            margin: 20px auto; /* Adds space around the button and centers it */
+            padding: 10px 20px; /* Adds padding to make the button larger */
+            font-size: 16px; /* Sets the font size */
+            cursor: pointer; /* Changes the cursor to a pointer when hovering over the button */
         }
     </style>
 </head>
 <body>
-
-    <!-- Main content area for displaying the temperature -->
+    <!-- Main content of the webpage -->
     <div>
+        <!-- Container for the temperature display -->
         <div class="text-properties">
-            <h2>Temperature</h2> <!-- Heading for the temperature display -->
-            <p class="value" id="temperature"></p> <!-- Placeholder where temperature value will be displayed -->
+            <h2>Temperature</h2> <!-- Heading for the temperature section -->
+            <p class="value" id="temperature"></p> <!-- Paragraph to display the temperature value -->
         </div>
+        <!-- Button to toggle the LED state (on/off) -->
+        <button id="toggleButton" class="toggle-btn">Turn LED on</button>
     </div>
- <!-- Including Firebase JavaScript libraries -->
+
+    <!-- Firebase SDKs for using Firebase services -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 
-    <!-- Section to include Firebase configuration -->
-    <!-- Copy-paste the script from Firebase website here (starting from <script type="module" until the "};" line) -->
-
-   <script type="module">
+    <!-- Firebase configuration code (copy-paste from Firebase console) -->
+    
+	
+<script type="module">
   // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
@@ -45,27 +56,47 @@
     measurementId: "G-52FF340Y6P"
   };
 
+      // Initializing Firebase with the configuration
+      firebase.initializeApp(firebaseConfig);
+      var database = firebase.database(); // Access the Firebase Realtime Database
 
-        // Initialize Firebase using the provided configuration
-        firebase.initializeApp(firebaseConfig);
+      // Reference to the temperature data in Firebase
+      var dataRef2 = database.ref('Myfirebase/temperature');
+      // Listening for changes to the temperature value from Firebase
+      dataRef2.on('value', function(getdata2) {
+          var temp = getdata2.val(); // Getting the temperature value
+          // Display the temperature on the webpage (with the Celsius symbol)
+          document.getElementById('temperature').innerHTML = temp + "&#8451;";
+      });
 
-        // Getting reference to Firebase Realtime Database
-        var database = firebase.database();
+      // Reference to the LED state in Firebase
+      var ledRef = database.ref('Myfirebase/LED');
+      var ledState = 0; // Default state of the LED (off)
+      var toggleButton = document.getElementById("toggleButton"); // Get the button element
 
-        // Getting reference to a specific location in the database where temperature data is stored
-        var dataRef2 = database.ref('Myfirebase/temperature');
+      // Function to update the text on the button based on the LED state
+      function updateButtonText() {
+          // Change the button text depending on whether the LED is on or off
+          toggleButton.textContent = ledState === 1 ? "Turn LED off" : "Turn LED on";
+      }
 
-        // Setting up a listener that listens for changes in the temperature value in the database
-        dataRef2.on('value', function(getdata2) {
-            // Retrieve the current value of temperature from Firebase
-            var temp = getdata2.val();
+      // Event listener for the button click
+      toggleButton.addEventListener("click", function() {
+          // Toggle the LED state (0 to 1 or 1 to 0)
+          ledState = ledState === 0 ? 1 : 0;
+          // Set the new LED state in Firebase
+          ledRef.set(ledState);
+          // Update the button text after the click
+          updateButtonText();
+      });
 
-            // Update the content of the HTML element with id 'temperature' with the new value of temperature
-            // The HTML entity "&#8451;" represents the Celsius degree symbol
-            document.getElementById('temperature').innerHTML = temp + "&#8451;";
-        });
+      // Listening for changes in the LED state from Firebase
+      ledRef.on('value', function(snapshot) {
+          // Get the LED state from Firebase
+          ledState = snapshot.val() || 0;
+          // Update the button text based on the current LED state
+          updateButtonText();
+      });
     </script>
-
 </body>
 </html>
-
